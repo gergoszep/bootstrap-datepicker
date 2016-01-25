@@ -1100,17 +1100,22 @@
 				months.slice(endMonth+1).addClass('disabled');
 			}
 
-			if (this.o.beforeShowMonth !== $.noop){
-				var that = this;
-				$.each(months, function(i, month){
-					if (!$(month).hasClass('disabled')) {
-						var moDate = new Date(year, i, 1);
-						var before = that.o.beforeShowMonth(moDate);
-						if (before === false)
-							$(month).addClass('disabled');
-					}
-				});
-			}
+      //PATCH szepg
+      //**********************
+      if (this.o.beforeShowMonth !== $.noop){
+        var that = this;
+        $.each(months, function(i, month){
+          if (!$(month).hasClass('disabled') || that.o.usePatch) {
+            var moDate = new Date(year, i, 1);
+            var before = that.o.beforeShowMonth(moDate);
+            if (before === false)
+              $(month).addClass('disabled');
+            else if (that.o.usePatch)
+              $(month).removeClass('disabled');
+          }
+        });
+      }
+      //**********************
 
 			// Generating decade/years picker
 			this._fill_yearsView(
@@ -1198,10 +1203,13 @@
 			var target, dir, day, year, month, monthChanged, yearChanged;
 			target = $(e.target);
 
-			// Clicked on the switch
-			if (target.hasClass('datepicker-switch')){
-				this.showMode(1);
-			}
+      //PATCH szepg
+      //**********************
+      // Clicked on the switch
+      if (target.hasClass('datepicker-switch') && !this.o.usePatch){
+        this.showMode(1);
+      }
+      //**********************
 
 			// Clicked on prev or next
 			var navArrow = target.closest('.prev, .next');
@@ -1298,6 +1306,16 @@
 					month = 0;
 					year = parseInt(target.text(), 10)||0;
 					this.viewDate.setUTCFullYear(year);
+
+          //PATCH szepg
+          //**************
+          if (target.hasClass('year')) {
+            this._trigger("changeYear", this.viewDate);
+            if (this.o.minViewMode === 1 && this.o.usePatch) {
+              this._setDate(UTCDate(year, month, day));
+            }
+          }
+          //**************
 
 					if (target.hasClass('year')){
 						this._trigger('changeYear', this.viewDate);
@@ -1799,7 +1817,8 @@
 		templates: {
 			leftArrow: '&laquo;',
 			rightArrow: '&raquo;'
-		}
+		},
+    usePatch: false
 	};
 	var locale_opts = $.fn.datepicker.locale_opts = [
 		'format',
